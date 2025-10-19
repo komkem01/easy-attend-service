@@ -1,74 +1,39 @@
 package main
 
 import (
-	"flag"
-	"log"
-	"net/http"
+	"context"
+	"fmt"
+	"os"
 
-	"easy-attend-service/internal/config"
-	"easy-attend-service/internal/database"
-	"easy-attend-service/internal/routes"
-
-	"github.com/gin-gonic/gin"
+	"github.com/komkem01/easy-attend-service/cmd"
+	"github.com/spf13/cobra"
 )
 
 func main() {
-	// Parse command line flags
-	migrate := flag.Bool("migrate", false, "Run database migration only")
-	force := flag.Bool("force", false, "Force migration even if there are errors")
-	flag.Parse()
+	ctx := context.Background()
 
-	log.Println("Starting Easy Attend Service...")
-
-	// Load configuration
-	cfg := config.Load()
-	log.Println("Configuration loaded successfully")
-
-	// Connect to database
-	if err := database.Connect(cfg); err != nil {
-		log.Fatal("Failed to connect to database:", err)
+	// Root command
+	rootCmd := &cobra.Command{
+		Use:   "easy-attend-service",
+		Short: "Easy Attend Service - Backend API",
+		Long:  "A backend service for attendance management system",
 	}
 
-	// If migrate flag is set, run migration and exit
-	if *migrate {
-		log.Println("Running database migration...")
-		if err := database.Migrate(); err != nil {
-			if *force {
-				log.Printf("Migration failed but continuing due to --force flag: %v", err)
-			} else {
-				log.Printf("Database migration failed: %v", err)
-				log.Println("If tables already exist, this is normal.")
-				log.Println("Use --force flag to ignore migration errors")
-				log.Fatal("Migration failed")
-			}
-		} else {
-			log.Println("Database migration completed successfully!")
-		}
-		return
+	// Add migrate commands
+	rootCmd.AddCommand(cmd.Migrate())
+
+	// Add serve command for HTTP server
+	rootCmd.AddCommand(cmd.Serve())
+
+	// Add healthcheck command
+	rootCmd.AddCommand(cmd.Healthcheck())
+
+	// Add version command
+	rootCmd.AddCommand(cmd.VersionCmd())
+
+	// Execute root command
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
 	}
-
-	// Initialize Gin router
-	router := gin.Default()
-
-	// Setup middleware
-	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusOK)
-			return
-		}
-
-		c.Next()
-	})
-
-	// Setup routes
-	routes.SetupRoutes(router)
-
-	// Start server
-	port := ":" + cfg.Server.Port
-	log.Printf("Server starting on port %s", port)
-	log.Fatal(router.Run(port))
 }
