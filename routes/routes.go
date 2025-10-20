@@ -39,6 +39,17 @@ func SetupRoutes() *gin.Engine {
 			authRoutes.POST("/refresh", auth.RefreshToken)
 		}
 
+		// Public routes (no authentication required)
+		public := v1.Group("/")
+		{
+			// View any user's profile by ID (public information only)
+			public.GET("/profile/:id", auth.GetProfileByID)
+
+			// Reference data endpoints
+			public.GET("/genders", auth.GetGenders)
+			public.GET("/prefixes", auth.GetPrefixes)
+		}
+
 		// Protected routes
 		protected := v1.Group("/")
 		protected.Use(middlewares.AuthMiddleware())

@@ -11,6 +11,7 @@ import (
 	"github.com/komkem01/easy-attend-service/requests"
 	"github.com/komkem01/easy-attend-service/utils"
 	"github.com/komkem01/easy-attend-service/utils/jwt"
+	"github.com/uptrace/bun"
 )
 
 var db = config.Database()
@@ -59,7 +60,12 @@ func LoginUserService(ctx context.Context, req requests.LoginRequest) (*model.Us
 
 	user := &model.Users{}
 
-	err = db.NewSelect().Model(user).Where("email = ?", req.Email).Scan(ctx)
+	err = db.NewSelect().Model(user).
+		Relation("School").
+		Relation("Prefix").
+		Relation("Gender").
+		Where("u.email = ?", req.Email).
+		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +89,11 @@ func LoginUserService(ctx context.Context, req requests.LoginRequest) (*model.Us
 
 // RegisterUserService creates a new user account
 func RegisterUserService(ctx context.Context, req requests.RegisterRequest) (*model.Users, error) {
+	// Validate password confirmation
+	if req.Password != req.ConfirmPassword {
+		return nil, errors.New("password confirmation does not match")
+	}
+
 	// Check if email already exists
 	exists, err := db.NewSelect().TableExpr("users").Where("email = ?", req.Email).Exists(ctx)
 	if err != nil {
@@ -91,6 +102,16 @@ func RegisterUserService(ctx context.Context, req requests.RegisterRequest) (*mo
 
 	if exists {
 		return nil, errors.New("email already registered")
+	}
+
+	// Check if username already exists
+	usernameExists, err := db.NewSelect().TableExpr("users").Where("username = ?", req.Username).Exists(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if usernameExists {
+		return nil, errors.New("username already taken")
 	}
 
 	// Find or create school
@@ -105,13 +126,37 @@ func RegisterUserService(ctx context.Context, req requests.RegisterRequest) (*mo
 		return nil, errors.New("failed to process password")
 	}
 
+	// Find gender ID if gender name is provided
+	var genderID *int
+	if req.Gender != nil {
+		genderID, err = FindGenderIDByName(ctx, *req.Gender)
+		if err != nil {
+			// If gender not found, ignore the error and continue without gender
+			genderID = nil
+		}
+	}
+
+	// Find prefix ID if prefix name is provided
+	var prefixID *int
+	if req.Prefix != nil {
+		prefixID, err = FindPrefixIDByName(ctx, *req.Prefix)
+		if err != nil {
+			// If prefix not found, ignore the error and continue without prefix
+			prefixID = nil
+		}
+	}
+
 	// Create new user
 	user := &model.Users{
 		ID:            uuid.New(),
+		Username:      req.Username,
 		Email:         req.Email,
 		PasswordHash:  hashedPassword,
-		Name:          req.Name,
-		Role:          req.Role,
+		PrefixID:      prefixID,
+		FirstName:     req.FirstName,
+		LastName:      req.LastName,
+		GenderID:      genderID,
+		Role:          req.UserType,
 		SchoolID:      &school.ID,
 		Phone:         req.Phone,
 		IsActive:      true,
@@ -147,12 +192,38 @@ func AuthResponseService(user *model.Users) (map[string]interface{}, error) {
 	}
 
 	userInfo := map[string]interface{}{
-		"id":        user.ID,
-		"email":     user.Email,
-		"name":      user.Name,
-		"role":      user.Role,
-		"school_id": user.SchoolID,
-		"is_active": user.IsActive,
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"first_name": user.FirstName,
+		"last_name":  user.LastName,
+		"full_name":  user.FirstName + " " + user.LastName,
+		"role":       user.Role,
+		"school_id":  user.SchoolID,
+		"is_active":  user.IsActive,
+		"created_at": user.CreatedAt,
+	}
+
+	// Add prefix information if available
+	if user.Prefix != nil {
+		userInfo["prefix"] = map[string]interface{}{
+			"id":           user.Prefix.ID,
+			"code":         user.Prefix.Code,
+			"name_th":      user.Prefix.NameTH,
+			"name_en":      user.Prefix.NameEN,
+			"abbreviation": user.Prefix.Abbreviation,
+		}
+	}
+
+	// Add gender information if available
+	if user.Gender != nil {
+		userInfo["gender"] = map[string]interface{}{
+			"id":           user.Gender.ID,
+			"code":         user.Gender.Code,
+			"name_th":      user.Gender.NameTH,
+			"name_en":      user.Gender.NameEN,
+			"abbreviation": user.Gender.Abbreviation,
+		}
 	}
 
 	// Add school information if available
@@ -207,4 +278,34 @@ func RefreshTokenService(ctx context.Context, refreshToken string) (map[string]i
 	}
 
 	return response, nil
+}
+
+// UpdateUserDataService updates user table data
+func UpdateUserDataService(ctx context.Context, userID string, updateData map[string]interface{}) error {
+	if len(updateData) == 0 {
+		return nil // No data to update
+	}
+
+	// Parse user ID
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return errors.New("invalid user ID")
+	}
+
+	// Add updated_at timestamp
+	updateData["updated_at"] = time.Now()
+
+	// Build and execute update query
+	query := db.NewUpdate().Model((*model.Users)(nil)).Where("id = ?", uid)
+
+	for key, value := range updateData {
+		query = query.Set("? = ?", bun.Ident(key), value)
+	}
+
+	_, err = query.Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

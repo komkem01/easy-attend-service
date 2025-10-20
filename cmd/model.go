@@ -39,6 +39,12 @@ func modelUp(db *bun.DB) error {
 		}
 	}
 
+	// Seed initial data for genders and prefixes
+	if err := migrations.SeedGendersAndPrefixes(context.Background(), db); err != nil {
+		log.Printf("Error seeding genders and prefixes: %s", err)
+		return err
+	}
+
 	return nil
 }
 

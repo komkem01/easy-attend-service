@@ -8,6 +8,8 @@ func Models() []any {
 	return []any{
 		// Core entities
 		(*model.Schools)(nil),
+		(*model.Genders)(nil),
+		(*model.Prefixes)(nil),
 		(*model.Users)(nil),
 		(*model.UserProfiles)(nil),
 		(*model.Classrooms)(nil),
@@ -95,6 +97,8 @@ func RawAfterQueryMigrate() []string {
 		// Add indexes for better performance
 		`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`,
 		`CREATE INDEX IF NOT EXISTS idx_users_school_id ON users(school_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_users_prefix_id ON users(prefix_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_users_gender_id ON users(gender_id);`,
 		`CREATE INDEX IF NOT EXISTS idx_classrooms_teacher_id ON classrooms(teacher_id);`,
 		`CREATE INDEX IF NOT EXISTS idx_classrooms_school_id ON classrooms(school_id);`,
 		`CREATE INDEX IF NOT EXISTS idx_classroom_students_classroom_id ON classroom_students(classroom_id);`,
