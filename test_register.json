@@ -1,0 +1,11 @@
+{
+  "first_name": "Test",
+  "last_name": "Teacher",
+  "username": "teacher123",
+  "email": "teacher@example.com",
+  "password": "password123",
+  "confirm_password": "password123",
+  "role": "teacher",
+  "user_type": "teacher",
+  "school_name": "Test School"
+}

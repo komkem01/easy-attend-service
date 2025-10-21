@@ -23,7 +23,7 @@ type Messages struct {
 	IsRead          bool       `json:"is_read" bun:"is_read,notnull,default:false"`
 	ReadAt          *time.Time `json:"read_at" bun:"read_at"`
 	IsDeleted       bool       `json:"is_deleted" bun:"is_deleted,notnull,default:false"`
-	DeletedAt       *time.Time `json:"deleted_at" bun:"deleted_at"`
+	DeletedAt       *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 	CreatedAt       time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
 
 	// Relations

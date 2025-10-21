@@ -22,6 +22,8 @@ type ApiKeys struct {
 	LastUsedAt  *time.Time `json:"last_used_at" bun:"last_used_at"`
 	UsageCount  int        `json:"usage_count" bun:"usage_count,default:0"`
 	CreatedAt   time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
+	UpdatedAt   time.Time  `json:"updated_at" bun:"updated_at,notnull,default:now()"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relations
 	User *Users `json:"user,omitempty" bun:"rel:belongs-to,join:user_id=id"`

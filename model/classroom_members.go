@@ -20,6 +20,7 @@ type ClassroomMembers struct {
 	LeftAt      *time.Time `json:"left_at" bun:"left_at"`
 	CreatedAt   time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
 	UpdatedAt   time.Time  `json:"updated_at" bun:"updated_at,notnull,default:now()"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relationships
 	Classroom *Classrooms `json:"classroom,omitempty" bun:"rel:belongs-to,join:classroom_id=id"`

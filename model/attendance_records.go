@@ -26,6 +26,7 @@ type AttendanceRecords struct {
 	ModifiedBy      *uuid.UUID `json:"modified_by" bun:"modified_by,type:uuid"`
 	CreatedAt       time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
 	UpdatedAt       time.Time  `json:"updated_at" bun:"updated_at,notnull,default:now()"`
+	DeletedAt       *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relations
 	Session  *AttendanceSessions `json:"session,omitempty" bun:"rel:belongs-to,join:session_id=id"`

@@ -32,6 +32,7 @@ type UserProfiles struct {
 	EmergencyContact *string    `json:"emergency_contact" bun:"emergency_contact,type:jsonb"`
 	CreatedAt        time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
 	UpdatedAt        time.Time  `json:"updated_at" bun:"updated_at,notnull,default:now()"`
+	DeletedAt        *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relationships
 	User *Users `json:"user,omitempty" bun:"rel:belongs-to,join:user_id=id"`

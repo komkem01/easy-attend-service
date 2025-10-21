@@ -1,0 +1,16 @@
+{
+  "classroom_id": "59e8fb43-b616-46dc-88f1-8200f88ecaf0",
+  "title": "Python Programming Assignment",
+  "description": "Create a simple Python program to calculate grades",
+  "instructions": "Write a Python program that:\n1. Takes test scores as input\n2. Calculates average grade\n3. Displays letter grade (A, B, C, D, F)",
+  "assignment_type": "homework",
+  "due_date": "2024-12-31T23:59:59Z",
+  "max_score": 100.0,
+  "weight": 1.0,
+  "allow_late_submission": true,
+  "late_penalty_percent": 10.0,
+  "submission_format": "both",
+  "max_file_size_mb": 10,
+  "allowed_file_types": "[\"py\", \"pdf\", \"docx\", \"txt\"]",
+  "is_published": false
+}

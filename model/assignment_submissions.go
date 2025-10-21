@@ -25,6 +25,7 @@ type AssignmentSubmissions struct {
 	GradedAt       *time.Time `json:"graded_at" bun:"graded_at"`
 	CreatedAt      time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
 	UpdatedAt      time.Time  `json:"updated_at" bun:"updated_at,notnull,default:now()"`
+	DeletedAt      *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relations
 	Assignment *Assignments `json:"assignment,omitempty" bun:"rel:belongs-to,join:assignment_id=id"`

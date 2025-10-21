@@ -59,6 +59,14 @@ func Success(ctx *gin.Context, data any) {
 	}, data})
 }
 
+// Created sends a 201 Created response
+func Created(ctx *gin.Context, data any) {
+	ctx.JSON(http.StatusCreated, Response{StatusResponse{
+		Code:    201,
+		Message: "Created",
+	}, data})
+}
+
 // InternalError ส่งผลลัพธ์เมื่อมีข้อผิดพลาดภายใน
 func InternalError(ctx *gin.Context, message any, payloadCode ...string) {
 	ctx.JSON(http.StatusInternalServerError, StatusResponse{
@@ -85,6 +93,14 @@ func BadRequest(ctx *gin.Context, message any, payloadCode ...string) {
 func Unauthorized(ctx *gin.Context, message any, payloadCode ...string) {
 	ctx.JSON(http.StatusUnauthorized, StatusResponse{
 		Code:    401,
+		Message: message.(string),
+	})
+}
+
+// Forbidden sends a 403 Forbidden response
+func Forbidden(ctx *gin.Context, message any, payloadCode ...string) {
+	ctx.JSON(http.StatusForbidden, StatusResponse{
+		Code:    403,
 		Message: message.(string),
 	})
 }

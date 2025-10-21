@@ -21,6 +21,7 @@ type SearchLogs struct {
 	IPAddress    *string    `json:"ip_address" bun:"ip_address"`
 	UserAgent    *string    `json:"user_agent" bun:"user_agent"`
 	CreatedAt    time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
+	DeletedAt    *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relationships
 	User *Users `json:"user,omitempty" bun:"rel:belongs-to,join:user_id=id"`

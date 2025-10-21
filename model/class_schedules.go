@@ -21,6 +21,7 @@ type ClassSchedules struct {
 	EffectiveFrom  *time.Time `json:"effective_from" bun:"effective_from,type:date"`
 	EffectiveUntil *time.Time `json:"effective_until" bun:"effective_until,type:date"`
 	CreatedAt      time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
+	DeletedAt      *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relations
 	Classroom *Classrooms `json:"classroom,omitempty" bun:"rel:belongs-to,join:classroom_id=id"`

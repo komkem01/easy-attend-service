@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/komkem01/easy-attend-service/model"
@@ -281,6 +282,27 @@ func GetGenders(c *gin.Context) {
 
 	response.Success(c, genders)
 }
+func GetGendersByID(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		response.BadRequest(c, "Gender ID is required")
+		return
+	}
+
+	genderID, err := strconv.Atoi(id)
+	if err != nil {
+		response.BadRequest(c, "Invalid gender ID format")
+		return
+	}
+
+	gender, err := GetGendersServiceByID(c.Request.Context(), genderID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to get gender")
+		return
+	}
+
+	response.Success(c, gender)
+}
 
 // GetPrefixes handles getting all prefixes
 func GetPrefixes(c *gin.Context) {
@@ -302,6 +324,233 @@ func GetPrefixes(c *gin.Context) {
 	}
 
 	response.Success(c, prefixes)
+}
+
+func GetPrefixesByID(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		response.BadRequest(c, "Prefix ID is required")
+		return
+	}
+
+	prefixID, err := strconv.Atoi(id)
+	if err != nil {
+		response.BadRequest(c, "Invalid prefix ID format")
+		return
+	}
+
+	prefix, err := GetPrefixesServiceByID(c.Request.Context(), prefixID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to get prefix")
+		return
+	}
+
+	response.Success(c, prefix)
+}
+
+// Schools CRUD Operations
+
+// GetSchools handles getting all schools
+func GetSchools(c *gin.Context) {
+	// Check if searching
+	searchQuery := c.Query("search")
+
+	var schools []model.Schools
+	var err error
+
+	if searchQuery != "" {
+		schools, err = SearchSchoolsService(c.Request.Context(), searchQuery)
+	} else {
+		schools, err = GetSchoolsService(c.Request.Context())
+	}
+
+	if err != nil {
+		response.InternalServerError(c, "Failed to get schools")
+		return
+	}
+
+	response.Success(c, schools)
+}
+
+// GetSchoolByID handles getting school by ID
+func GetSchoolByID(c *gin.Context) {
+	schoolID := c.Param("id")
+	if schoolID == "" {
+		response.BadRequest(c, "School ID is required")
+		return
+	}
+
+	school, err := GetSchoolByIDService(c.Request.Context(), schoolID)
+	if err != nil {
+		response.NotFound(c, "School not found")
+		return
+	}
+
+	response.Success(c, school)
+}
+
+// CreateSchool handles creating a new school
+func CreateSchool(c *gin.Context) {
+	var req requests.CreateSchoolRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// Convert optional fields to empty strings if nil
+	address := ""
+	if req.Address != nil {
+		address = *req.Address
+	}
+	phone := ""
+	if req.Phone != nil {
+		phone = *req.Phone
+	}
+	email := ""
+	if req.Email != nil {
+		email = *req.Email
+	}
+	websiteURL := ""
+	if req.WebsiteURL != nil {
+		websiteURL = *req.WebsiteURL
+	}
+
+	school, err := CreateSchoolService(c.Request.Context(), req.Name, address, phone, email, websiteURL)
+	if err != nil {
+		if err.Error() == "school name already exists" {
+			response.Conflict(c, "School name already exists")
+			return
+		}
+		response.InternalServerError(c, "Failed to create school")
+		return
+	}
+
+	response.Created(c, school)
+}
+
+// UpdateSchool handles updating school information
+func UpdateSchool(c *gin.Context) {
+	schoolID := c.Param("id")
+	if schoolID == "" {
+		response.BadRequest(c, "School ID is required")
+		return
+	}
+
+	var req requests.UpdateSchoolRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// Convert request to map for flexible updating
+	updateData := make(map[string]interface{})
+
+	if req.Name != nil {
+		updateData["name"] = *req.Name
+	}
+	if req.Address != nil {
+		updateData["address"] = *req.Address
+	}
+	if req.Phone != nil {
+		updateData["phone"] = *req.Phone
+	}
+	if req.Email != nil {
+		updateData["email"] = *req.Email
+	}
+	if req.WebsiteURL != nil {
+		updateData["website_url"] = *req.WebsiteURL
+	}
+
+	school, err := UpdateSchoolService(c.Request.Context(), schoolID, updateData)
+	if err != nil {
+		if err.Error() == "school name already exists" {
+			response.Conflict(c, "School name already exists")
+			return
+		}
+		if err.Error() == "no data to update" {
+			response.BadRequest(c, "No data to update")
+			return
+		}
+		response.InternalServerError(c, "Failed to update school")
+		return
+	}
+
+	response.Success(c, school)
+}
+
+// DeleteSchool handles soft deleting a school
+func DeleteSchool(c *gin.Context) {
+	schoolID := c.Param("id")
+	if schoolID == "" {
+		response.BadRequest(c, "School ID is required")
+		return
+	}
+
+	err := DeleteSchoolService(c.Request.Context(), schoolID)
+	if err != nil {
+		if err.Error() == "cannot delete school that has active users" {
+			response.Conflict(c, "Cannot delete school that has active users")
+			return
+		}
+		response.InternalServerError(c, "Failed to delete school")
+		return
+	}
+
+	response.Success(c, gin.H{"message": "School deleted successfully"})
+}
+
+// GetInfo handles getting system information
+func GetInfo(c *gin.Context) {
+	info := map[string]interface{}{
+		"service_name":  "Easy Attend Service",
+		"version":       "1.0.0",
+		"description":   "A comprehensive attendance management system for educational institutions",
+		"api_version":   "v1",
+		"documentation": "/docs",
+		"health_check":  "/health",
+		"features": []string{
+			"User Authentication & Authorization",
+			"School Management",
+			"Student Registration",
+			"Teacher Management",
+			"Attendance Tracking",
+			"Profile Management",
+			"Gender & Prefix Support",
+			"Multi-language Support (Thai/English)",
+		},
+		"endpoints": map[string]interface{}{
+			"auth": map[string]string{
+				"login":    "POST /api/v1/auth/login",
+				"register": "POST /api/v1/auth/register",
+				"refresh":  "POST /api/v1/auth/refresh",
+			},
+			"profile": map[string]string{
+				"get_own":   "GET /api/v1/profile",
+				"update":    "PATCH /api/v1/profile",
+				"get_by_id": "GET /api/v1/profile/{id}",
+			},
+			"schools": map[string]string{
+				"list":   "GET /api/v1/schools",
+				"get":    "GET /api/v1/schools/{id}",
+				"create": "POST /api/v1/schools",
+				"update": "PATCH /api/v1/schools/{id}",
+				"delete": "DELETE /api/v1/schools/{id}",
+				"search": "GET /api/v1/schools?search={query}",
+			},
+			"reference": map[string]string{
+				"genders":  "GET /api/v1/genders",
+				"prefixes": "GET /api/v1/prefixes",
+			},
+		},
+		"contact": map[string]string{
+			"developer": "Easy Attend Development Team",
+			"email":     "support@easyattend.com",
+		},
+	}
+
+	response.Success(c, info)
 }
 
 // GetProfileByID handles getting user profile by user ID

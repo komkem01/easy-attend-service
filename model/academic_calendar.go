@@ -23,6 +23,8 @@ type AcademicCalendar struct {
 	AffectsAttendance bool       `json:"affects_attendance" bun:"affects_attendance,notnull,default:true"`
 	CreatedBy         uuid.UUID  `json:"created_by" bun:"created_by,notnull,type:uuid"`
 	CreatedAt         time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
+	UpdatedAt         time.Time  `json:"updated_at" bun:"updated_at,notnull,default:now()"`
+	DeletedAt         *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relations
 	School  *Schools `json:"school,omitempty" bun:"rel:belongs-to,join:school_id=id"`

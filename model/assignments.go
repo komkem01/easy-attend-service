@@ -30,6 +30,7 @@ type Assignments struct {
 	CreatedBy           uuid.UUID  `json:"created_by" bun:"created_by,notnull,type:uuid"`
 	CreatedAt           time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
 	UpdatedAt           time.Time  `json:"updated_at" bun:"updated_at,notnull,default:now()"`
+	DeletedAt           *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 
 	// Relations
 	Classroom *Classrooms `json:"classroom,omitempty" bun:"rel:belongs-to,join:classroom_id=id"`

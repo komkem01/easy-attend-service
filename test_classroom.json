@@ -1,0 +1,12 @@
+{
+  "name": "Computer Science 101",
+  "subject": "Computer Science",
+  "description": "Introduction to Computer Science",
+  "academic_year": "2024",
+  "semester": "1",
+  "day_of_week": "monday",
+  "start_time": "09:00",
+  "end_time": "12:00",
+  "room": "Lab 204",
+  "capacity": 30
+}

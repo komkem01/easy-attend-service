@@ -23,7 +23,7 @@ type FileUploads struct {
 	RelatedID    *uuid.UUID `json:"related_id" bun:"related_id,type:uuid"`
 	IsPublic     bool       `json:"is_public" bun:"is_public,notnull,default:false"`
 	Description  *string    `json:"description" bun:"description"`
-	DeletedAt    *time.Time `json:"deleted_at" bun:"deleted_at"`
+	DeletedAt    *time.Time `json:"deleted_at,omitempty" bun:"deleted_at,soft_delete"`
 	CreatedAt    time.Time  `json:"created_at" bun:"created_at,notnull,default:now()"`
 	UpdatedAt    time.Time  `json:"updated_at" bun:"updated_at,notnull,default:now()"`
 

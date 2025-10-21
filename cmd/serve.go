@@ -32,8 +32,11 @@ func Serve() *cobra.Command {
 }
 
 func startServer() {
-	// Initialize routes
-	router := routes.SetupRoutes()
+	// Get database connection
+	db := config.Database()
+
+	// Initialize routes with database
+	router := routes.SetupRoutes(db)
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
